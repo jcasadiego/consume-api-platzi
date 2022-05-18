@@ -1,4 +1,4 @@
-console.log('Hello word');
+console.log('Usando fetch');
 
 const URL = 'https://api.thecatapi.com/v1/images/search';
 
