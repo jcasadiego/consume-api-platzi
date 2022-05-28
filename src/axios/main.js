@@ -1,22 +1,20 @@
-console.log('Usando async/await con headers en favoritos');
+console.log('Usando async/await con axios en favoritos');
 
-const API_RANDOM = 'https://api.thecatapi.com/v1/images/search?limit=2';
+const api = axios.create({
+    baseURL: 'https://api.thecatapi.com/v1'
+});
 
-const API_FAVORITES = 'https://api.thecatapi.com/v1/favourites';
-
-const API_UPLOAD = 'https://api.thecatapi.com/v1/images/upload';
-
-const API_DELETE = (id) => `https://api.thecatapi.com/v1/favourites/${id}`;
+api.defaults.headers.common['X-API-KEY'] = 'e00fbbe7-8faa-4df8-8c8a-bfcef481fefb';
 
 const spanError = document.getElementById('error')
 
 async function loadRandomMichis(){
-    try{
-        const res = await fetch(API_RANDOM);
-        const data = await res.json();
 
-        if(res.status !== 200){
-            spanError.innerHTML = "Hubo un error: " + res.status;
+    const {data, status} = await api.get('/images/search?limit=2');
+
+    try{
+        if(status !== 200){
+            spanError.innerHTML = "Hubo un error: " + status;
         } else {
             const img1 = document.getElementById('img1');
             const btn1 = document.getElementById('btn1');
@@ -31,23 +29,18 @@ async function loadRandomMichis(){
             console.log('Se realizo la peticion exitosamente cargando gatos aleatorios');
         }
     } catch(error){
-        spanError.innerHTML = "Hubo un error: " + res.status;
+        spanError.innerHTML = "Hubo un error: " + status;
         console.error(error)
     }
 }
 
 async function loadFavouriteMichis(){
-    try{
-        const res = await fetch(API_FAVORITES, {
-            method: 'GET',
-            headers: {
-                'X-API-KEY': 'e00fbbe7-8faa-4df8-8c8a-bfcef481fefb',
-            }
-        });
-        const data = await res.json();
 
-        if(res.status !== 200){
-            spanError.innerHTML = "Hubo un error: " + res.status + data.message;
+    const {data, status} = await api.get('/favourites');
+
+    try{
+        if(status !== 200){
+            spanError.innerHTML = "Hubo un error: " + status + data.message;
         } else {
             const section = document.getElementById('favoriteMichis');
             section.innerHTML = "";
@@ -71,26 +64,18 @@ async function loadFavouriteMichis(){
             });
         }
     } catch(error) {
-        spanError.innerHTML = "Hubo un error: " + res.status;
+        spanError.innerHTML = "Hubo un error: " + status;
         console.error(error);
     }
 }
 
 async function saveFavouriteMichi(id){
-    const res = await fetch(API_FAVORITES, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-API-KEY': 'e00fbbe7-8faa-4df8-8c8a-bfcef481fefb',
-        },
-        body: JSON.stringify({
-            image_id: id
-        }),
-    })
-    const data = await res.json();
+    const {data, status} = await api.post('/favourites', {
+        image_id: id,
+    });
 
-    if(res.status !== 200){
-        spanError.innerHTML = "Hubo un error: " + res.status + data.message;
+    if(status !== 200){
+        spanError.innerHTML = "Hubo un error: " + status + data.message;
     } else {
         console.log('Se realizo la peticion exitosamente guardando gato favorito');
         loadFavouriteMichis();
@@ -98,16 +83,11 @@ async function saveFavouriteMichi(id){
 }
 
 async function deleteFavouriteMichi(id){
-    const res = await fetch(API_DELETE(id), {
-        method: 'DELETE',
-        headers: {
-            'X-API-KEY': 'e00fbbe7-8faa-4df8-8c8a-bfcef481fefb',
-        }
-    });
-    const data = await res.json();
 
-    if(res.status !== 200){
-        spanError.innerHTML = "Hubo un error: " + res.status + data.message;
+    const {data, status} = await api.delete(`/favourites/${id}`);
+
+    if(status !== 200){
+        spanError.innerHTML = "Hubo un error: " + status + data.message;
     } else {
         console.log('Se realizo la peticion exitosamente eliminando el gato de favorito');
         loadFavouriteMichis();
@@ -120,18 +100,14 @@ async function uploadMichiPhoto(){
 
     console.log(formData.get('file'));
 
-    const res = await fetch(API_UPLOAD, {
-        method: 'POST',
-        headers: {
-            //'Content-Type': 'multipart/form-data',
-            'X-API-KEY': 'e00fbbe7-8faa-4df8-8c8a-bfcef481fefb',
+    const {data, status} = await api.post('/images/upload', {
+        data: {
+            body: formData,
         },
-        body: formData,
-    })
-    const data = await res.json();
+    });
 
-    if (res.status !== 201) {
-        spanError.innerHTML = `Hubo un error al subir michi: ${res.status} ${data.message}`
+    if (status !== 201) {
+        spanError.innerHTML = `Hubo un error al subir michi: ${status} ${data.message}`
     }
     else {
         console.log("Foto de michi cargada :)");
